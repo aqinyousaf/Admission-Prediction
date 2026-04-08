@@ -5,8 +5,8 @@ A machine learning web application that predicts a student's chance of admission
 
 ## 📸 Preview
 
-![App Screenshot](screenshot.png)
-![App Screenshot (1)](screenshot1.png)
+![App Screenshot](Screenshot.png)
+![App Screenshot (1)](Screenshot1.png)
 
 > *Click the "Live Demo" badge above to try it yourself!*
 
