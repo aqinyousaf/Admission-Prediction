@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎓 Admissions Predictor | ML Model</title>
+    <style>
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; margin: 0; }
+        .card { background: white; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); max-width: 700px; width: 100%; padding: 30px; }
+        h1 { margin-top: 0; color: #2d3748; display: flex; align-items: center; gap: 10px; }
+        .subtitle { color: #718096; margin-bottom: 25px; border-left: 4px solid #667eea; padding-left: 15px; }
+        .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .input-field { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; color: #4a5568; margin-bottom: 5px; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1rem; transition: border 0.2s; }
+        input:focus { border-color: #667eea; outline: none; }
+        .slider-container { display: flex; align-items: center; gap: 10px; }
+        .slider-container input { flex: 1; }
+        .slider-value { min-width: 45px; text-align: right; font-weight: 600; color: #667eea; }
+        button { background: #667eea; color: white; border: none; padding: 15px 25px; font-size: 1.1rem; font-weight: 600; border-radius: 16px; width: 100%; cursor: pointer; margin: 20px 0 10px; transition: transform 0.1s, box-shadow 0.2s; }
+        button:hover { background: #5a67d8; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3); }
+        .result-box { background: #f7fafc; border-radius: 16px; padding: 20px; margin-top: 20px; text-align: center; }
+        .probability { font-size: 3rem; font-weight: 800; margin: 10px 0; }
+        .advice { font-size: 1.2rem; color: #2d3748; }
+        .error { color: #e53e3e; background: #fff5f5; padding: 10px; border-radius: 8px; margin-top: 10px; }
+        .footer { text-align: center; margin-top: 20px; color: #a0aec0; font-size: 0.8rem; }
+        .note { background: #edf2f7; padding: 10px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>📊 Grad School Admission Predictor</h1>
+        <div class="subtitle">Powered by Linear Regression (Trained on 400+ Profiles)</div>
+        
+        <div class="note">
+            ⚡ This is a live ML model running in your browser. No data leaves your device.
+        </div>
+
+        <div class="input-group">
+            <div class="input-field">
+                <label>🎯 GRE Score <span style="font-weight:normal;">(260-340)</span></label>
+                <div class="slider-container">
+                    <input type="range" id="gre" min="260" max="340" value="315" step="1">
+                    <span class="slider-value" id="greVal">315</span>
+                </div>
+            </div>
+            <div class="input-field">
+                <label>🗣️ TOEFL Score <span style="font-weight:normal;">(0-120)</span></label>
+                <div class="slider-container">
+                    <input type="range" id="toefl" min="0" max="120" value="105" step="1">
+                    <span class="slider-value" id="toeflVal">105</span>
+                </div>
+            </div>
+            <div class="input-field">
+                <label>🏛️ University Rating <span style="font-weight:normal;">(1-5)</span></label>
+                <div class="slider-container">
+                    <input type="range" id="uni" min="1" max="5" value="3" step="1">
+                    <span class="slider-value" id="uniVal">3</span>
+                </div>
+            </div>
+            <div class="input-field">
+                <label>📝 SOP Strength <span style="font-weight:normal;">(1.0-5.0)</span></label>
+                <div class="slider-container">
+                    <input type="range" id="sop" min="1.0" max="5.0" value="3.5" step="0.1">
+                    <span class="slider-value" id="sopVal">3.5</span>
+                </div>
+            </div>
+            <div class="input-field">
+                <label>📧 LOR Strength <span style="font-weight:normal;">(1.0-5.0)</span></label>
+                <div class="slider-container">
+                    <input type="range" id="lor" min="1.0" max="5.0" value="3.5" step="0.1">
+                    <span class="slider-value" id="lorVal">3.5</span>
+                </div>
+            </div>
+            <div class="input-field">
+                <label>📚 CGPA <span style="font-weight:normal;">(1.0-10.0)</span></label>
+                <div class="slider-container">
+                    <input type="range" id="cgpa" min="1.0" max="10.0" value="8.2" step="0.1">
+                    <span class="slider-value" id="cgpaVal">8.2</span>
+                </div>
+            </div>
+            <div class="input-field">
+                <label>🔬 Research Experience</label>
+                <select id="research">
+                    <option value="0">No</option>
+                    <option value="1" selected>Yes</option>
+                </select>
+            </div>
+        </div>
+
+        <button onclick="predict()">🔮 Predict My Admission Chance</button>
+        <div id="errorBox" class="error" style="display:none;"></div>
+        
+        <div class="result-box" id="resultBox" style="display:none;">
+            <div style="font-weight:600; text-transform:uppercase; letter-spacing:1px;" id="category"></div>
+            <div class="probability" id="probDisplay">--%</div>
+            <div class="advice" id="adviceText"></div>
+        </div>
+        <div class="footer">
+            🛡️ Data validation active | Model: Linear Regression
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // CONFIGURATION: PASTE YOUR MODEL PARAMETERS HERE
+        // Run the Python code provided to get these numbers!
+        // ============================================================
+        
+        // Intercept (bias term) from Logistic Regression
+        const INTERCEPT = 0.7268046373139083; 
+        
+        // Coefficients for each feature in order: [GRE, TOEFL, Uni, SOP, LOR, CGPA, Research]
+        const COEFFICIENTS = [0.02134305, 0.01651078, 0.00842724, -0.00029438, 0.01415149, 0.06829365,  0.01106326]; // REPLACE WITH YOUR model.coef_[0]
+        
+        // StandardScaler parameters
+        const MEANS = [316.8075, 107.41, 3.0875, 3.4, 3.4525, 8.598925, 0.5475]; 
+        const SCALES = [11.45929508, 6.06192214, 1.14229758, 1.00560927, 0.89735375, 0.59557123, 0.49773864];
+        
+        // Feature order (do not change)
+        const FEATURE_ORDER = ['GRE', 'TOEFL', 'Uni', 'SOP', 'LOR', 'CGPA', 'Research'];
+        
+        // ============================================================
+        // DO NOT EDIT BELOW THIS LINE (Unless you know JS)
+        // ============================================================
+
+        // Update slider displays
+        document.querySelectorAll('input[type=range]').forEach(slider => {
+            const span = document.getElementById(slider.id + 'Val');
+            slider.addEventListener('input', () => { span.textContent = slider.value; });
+            span.textContent = slider.value;
+        });
+
+        function validateInputs(gre, toefl, uni, sop, lor, cgpa, research) {
+            const errors = [];
+            if (gre < 260 || gre > 340) errors.push("GRE must be between 260 and 340.");
+            if (toefl < 0 || toefl > 120) errors.push("TOEFL must be between 0 and 120.");
+            if (uni < 1 || uni > 5) errors.push("University Rating must be 1-5.");
+            if (sop < 1.0 || sop > 5.0) errors.push("SOP must be 1.0-5.0.");
+            if (lor < 1.0 || lor > 5.0) errors.push("LOR must be 1.0-5.0.");
+            if (cgpa < 1.0 || cgpa > 10.0) errors.push("CGPA must be 1.0-10.0.");
+            if (research !== 0 && research !== 1) errors.push("Research must be 0 or 1.");
+            return errors;
+        }
+
+        function scaleAndPredict(features) {
+            // Apply StandardScaler transformation: (x - mean) / scale
+            const scaled = features.map((val, i) => (val - MEANS[i]) / SCALES[i]);
+            
+            // Logistic Regression: z = intercept + sum(coefficient_i * scaled_i)
+            let z = INTERCEPT;
+            for (let i = 0; i < scaled.length; i++) {
+                z += COEFFICIENTS[i] * scaled[i];
+            }
+            
+            // Sigmoid function
+            return 1 / (1 + Math.exp(-z));
+        }
+
+        function predict() {
+            const errorBox = document.getElementById('errorBox');
+            const resultBox = document.getElementById('resultBox');
+            
+            // Get values
+            const gre = parseFloat(document.getElementById('gre').value);
+            const toefl = parseFloat(document.getElementById('toefl').value);
+            const uni = parseInt(document.getElementById('uni').value);
+            const sop = parseFloat(document.getElementById('sop').value);
+            const lor = parseFloat(document.getElementById('lor').value);
+            const cgpa = parseFloat(document.getElementById('cgpa').value);
+            const research = parseInt(document.getElementById('research').value);
+            
+            // Validate
+            const errors = validateInputs(gre, toefl, uni, sop, lor, cgpa, research);
+            if (errors.length > 0) {
+                errorBox.style.display = 'block';
+                errorBox.innerHTML = '❌ ' + errors.join('<br>');
+                resultBox.style.display = 'none';
+                return;
+            }
+            
+            errorBox.style.display = 'none';
+            
+            // Prepare feature array in exact order
+            const features = [gre, toefl, uni, sop, lor, cgpa, research];
+            
+            // Predict
+            const prob = scaleAndPredict(features);
+            const percent = (prob * 100).toFixed(1);
+            
+            // Business logic translation
+            let category, advice, color;
+            if (prob >= 0.70) {
+                category = "✅ STRONG CANDIDATE";
+                advice = "High likelihood of admission. This profile aligns with top admits.";
+                document.getElementById('category').style.color = "#38a169";
+            } else if (prob >= 0.40) {
+                category = "❓ BORDERLINE";
+                advice = "Competitive zone. Essays and LORs will be decisive.";
+                document.getElementById('category').style.color = "#d69e2e";
+            } else {
+                category = "⏸️ LOW PROBABILITY";
+                advice = "Significant hurdles based on historical patterns. Consider strengthening profile.";
+                document.getElementById('category').style.color = "#e53e3e";
+            }
+            
+            document.getElementById('category').innerText = category;
+            document.getElementById('probDisplay').innerText = percent + '%';
+            document.getElementById('adviceText').innerText = advice;
+            resultBox.style.display = 'block';
+            
+            // Optional: Log prediction to console (could send to Google Analytics or a simple endpoint)
+            console.log(`Prediction: ${percent}% | GRE:${gre} TOEFL:${toefl} CGPA:${cgpa}`);
+        }
+
+        // Run on page load
+        window.onload = predict;
+    </script>
+</body>
+</html>
